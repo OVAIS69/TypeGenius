@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeGenius</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: #2d3748; /* Slightly lighter dark background for container */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .text-display {
+            font-size: 1.5rem; /* Larger text */
+            line-height: 1.8;
+            min-height: 100px; /* Ensure visibility even with no text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background-color: #1a202c;
+            border: 1px solid #4a5568;
+            overflow-wrap: break-word; /* Ensure long words break */
+            word-break: break-all; /* Break long words */
+        }
+        .text-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid #4a5568;
+            background-color: #2d3748;
+            color: #e2e8f0;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .text-input:focus {
+            border-color: #63b3ed; /* Highlight on focus */
+        }
+        .metric-item {
+            background-color: #4a5568;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #90cdf4; /* A vibrant blue */
+        }
+        .correct-char {
+            color: #48bb78; /* Green for correct */
+        }
+        .incorrect-char {
+            color: #f56565; /* Red for incorrect */
+            background-color: rgba(255, 0, 0, 0.2); /* Subtle red background for errors */
+            border-radius: 0.25rem;
+            padding: 0 2px;
+            margin: 0 -2px;
+        }
+        .current-char {
+            background-color: #ecc94b; /* Yellow for current character */
+            color: #1a202c;
+            border-radius: 0.25rem;
+            padding: 0 2px;
+            margin: 0 -2px;
+        }
+        .button-primary {
+            background-color: #63b3ed;
+            color: #1a202c;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .button-primary:hover {
+            background-color: #4299e1;
+            transform: translateY(-2px);
+        }
+        .button-primary:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .message-box {
+            background-color: #2d3748;
+            border: 1px solid #4a5568;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #90cdf4;
+            display: none; /* Hidden by default */
+        }
+        .text-selector {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #4a5568;
+            background-color: #2d3748;
+            color: #e2e8f0;
+            outline: none;
+            cursor: pointer;
+        }
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-content input[type="text"] {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #4a5568;
+            background-color: #1a202c;
+            color: #e2e8f0;
+            font-size: 1rem;
+            outline: none;
+        }
+        .modal-content button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .modal-content .generate-button {
+            background-color: #48bb78; /* Green for generate */
+            color: #1a202c;
+        }
+        .modal-content .generate-button:hover {
+            background-color: #38a169;
+        }
+        .modal-content .cancel-button {
+            background-color: #f56565; /* Red for cancel */
+            color: #1a202c;
+        }
+        .modal-content .cancel-button:hover {
+            background-color: #e53e3e;
+        }
+        .loading-indicator {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #90cdf4;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-white mb-4">TypeGenius</h1>
+
+        <select id="text-selector" class="text-selector mb-4">
+            <option value="0">The quick brown fox jumps over the lazy dog, is a sentence containing all the letters of the alphabet.</option>
+            <option value="1">Never underestimate the power of a good book. Reading opens doors to new worlds and ideas.</option>
+            <option value="2">Technology has transformed the way we live, work, and interact. It continues to evolve at an astonishing pace.</option>
+            <option value="3">The early bird catches the worm, but the second mouse gets the cheese. Choose your strategy wisely.</option>
+            <option value="4">Creativity is intelligence having fun. Explore new possibilities and don't be afraid to make mistakes.</option>
+        </select>
+
+        <div id="text-display" class="text-display"></div>
+        <input type="text" id="text-input" class="text-input" placeholder="Start typing here...">
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+            <div class="metric-item">
+                <span class="metric-value" id="wpm">0</span>
+                <span>WPM</span>
+            </div>
+            <div class="metric-item">
+                <span class="metric-value" id="cpm">0</span>
+                <span>CPM</span>
+            </div>
+            <div class="metric-item">
+                <span class="metric-value" id="accuracy">0%</span>
+                <span>Accuracy</span>
+            </div>
+            <div class="metric-item">
+                <span class="metric-value" id="time">0.00</span>
+                <span>Seconds</span>
+            </div>
+        </div>
+
+        <button id="generate-text-button" class="button-primary">✨ Generate New Text</button>
+        <button id="restart-button" class="button-primary">Restart Test</button>
+
+        <div id="message-box" class="message-box"></div>
+    </div>
+
+    <!-- Generate Text Modal -->
+    <div id="generate-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold text-white mb-2">Generate Custom Text</h2>
+            <p class="text-sm text-gray-400">Enter a topic or keywords for a new typing passage:</p>
+            <input type="text" id="prompt-input" placeholder="e.g., 'a short story about a brave knight'">
+            <div class="loading-indicator" id="loading-indicator">Generating...</div>
+            <div class="flex justify-end gap-4 mt-4">
+                <button id="generate-button" class="generate-button">Generate</button>
+                <button id="cancel-button" class="cancel-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Core logic for the typing test
+        const textDisplay = document.getElementById('text-display');
+        const textInput = document.getElementById('text-input');
+        const wpmSpan = document.getElementById('wpm');
+        const cpmSpan = document.getElementById('cpm');
+        const accuracySpan = document.getElementById('accuracy');
+        const timeSpan = document.getElementById('time');
+        const restartButton = document.getElementById('restart-button');
+        const messageBox = document.getElementById('message-box');
+        const textSelector = document.getElementById('text-selector');
+        const generateTextButton = document.getElementById('generate-text-button');
+        const generateModal = document.getElementById('generate-modal');
+        const promptInput = document.getElementById('prompt-input');
+        const generateButton = document.getElementById('generate-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        const texts = [
+            "The quick brown fox jumps over the lazy dog, is a sentence containing all the letters of the alphabet.",
+            "Never underestimate the power of a good book. Reading opens doors to new worlds and ideas.",
+            "Technology has transformed the way we live, work, and interact. It continues to evolve at an astonishing pace.",
+            "The early bird catches the worm, but the second mouse gets the cheese. Choose your strategy wisely.",
+            "Creativity is intelligence having fun. Explore new possibilities and don't be afraid to make mistakes."
+        ];
+
+        let targetText = texts[0]; // Default text
+        let typedText = [];
+        let startTime = null;
+        let timerInterval = null;
+        let audioContext = null; // For simple audio feedback
+        let isTestActive = false;
+        let correctChars = 0;
+        let totalCharsTyped = 0;
+
+        // Function to play a simple beep sound
+        function playSound(type) {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch (type) {
+                case 'correct':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = 880; // Higher pitch for correct
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    break;
+                case 'incorrect':
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.value = 220; // Lower pitch for incorrect
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                    break;
+                case 'success':
+                    oscillator.type = 'square';
+                    oscillator.frequency.value = 1200; // Very high pitch for success
+                    gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
+                    break;
+                case 'backspace':
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.value = 150; // Low pitch for backspace
+                    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+                    break;
+                default:
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = 440; // Default key press
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            }
+
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05); // Fade out over 50ms
+            oscillator.stop(audioContext.currentTime + 0.05);
+        }
+
+        // Renders the target text and highlights typed characters
+        function renderText() {
+            textDisplay.innerHTML = ''; // Clear previous content
+            targetText.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+
+                if (index < typedText.length) {
+                    // Character has been typed
+                    if (typedText[index] === char) {
+                        span.classList.add('correct-char');
+                    } else {
+                        span.classList.add('incorrect-char');
+                    }
+                } else if (index === typedText.length && isTestActive) {
+                    // Current character to type
+                    span.classList.add('current-char');
+                }
+                textDisplay.appendChild(span);
+            });
+        }
+
+        // Updates WPM, CPM, Accuracy, and elapsed time
+        function updateMetrics() {
+            if (!startTime) return;
+
+            const currentTime = new Date().getTime();
+            const elapsedTime = (currentTime - startTime) / 1000; // in seconds
+            timeSpan.textContent = elapsedTime.toFixed(2);
+
+            const charactersTyped = typedText.length;
+            const wordsTyped = charactersTyped / 5; // Standard WPM calculation (5 chars per word)
+
+            const minutes = elapsedTime / 60;
+            const calculatedCPM = minutes > 0 ? Math.round(charactersTyped / minutes) : 0;
+            const calculatedWPM = minutes > 0 ? Math.round(wordsTyped / minutes) : 0;
+
+            let currentCorrectChars = 0;
+            for (let i = 0; i < typedText.length; i++) {
+                if (typedText[i] === targetText[i]) {
+                    currentCorrectChars++;
+                }
+            }
+            const calculatedAccuracy = charactersTyped > 0 ? Math.round((currentCorrectChars / charactersTyped) * 100) : 0;
+
+            cpmSpan.textContent = calculatedCPM;
+            wpmSpan.textContent = calculatedWPM;
+            accuracySpan.textContent = `${calculatedAccuracy}%`;
+        }
+
+        // Starts the typing test
+        function startTest() {
+            typedText = [];
+            textInput.value = '';
+            wpmSpan.textContent = '0';
+            cpmSpan.textContent = '0';
+            accuracySpan.textContent = '0%';
+            timeSpan.textContent = '0.00';
+            messageBox.style.display = 'none'; // Hide any messages
+
+            // Reset correct and total chars for accuracy
+            correctChars = 0;
+            totalCharsTyped = 0;
+
+            renderText();
+            textInput.focus(); // Focus on the input field
+            textInput.disabled = false; // Ensure input is enabled
+            isTestActive = true;
+            startTime = new Date().getTime();
+            clearInterval(timerInterval); // Clear any existing interval
+            timerInterval = setInterval(updateMetrics, 100); // Update metrics every 100ms
+        }
+
+        // Handles user input
+        textInput.addEventListener('input', (event) => {
+            if (!isTestActive) {
+                startTest(); // Start test on first input
+            }
+
+            const currentInput = event.target.value;
+            const newTypedLength = currentInput.length;
+            const oldTypedLength = typedText.length;
+
+            // Update typedText, ensuring it doesn't exceed targetText length
+            typedText = Array.from(currentInput).slice(0, targetText.length);
+
+            // Check for character correctness and play sound
+            if (newTypedLength > oldTypedLength && newTypedLength <= targetText.length) {
+                const lastTypedChar = typedText[newTypedLength - 1];
+                const correspondingTargetChar = targetText[newTypedLength - 1];
+
+                if (lastTypedChar === correspondingTargetChar) {
+                    playSound('correct');
+                } else {
+                    playSound('incorrect');
+                }
+            } else if (newTypedLength < oldTypedLength) {
+                // Backspace handled by keydown for distinct sound, but input event also fires
+                // No sound here to avoid double-play if keydown already handled it
+            }
+
+            renderText();
+            updateMetrics();
+
+            // Check if the test is completed (all characters typed)
+            if (typedText.length === targetText.length) {
+                const finalTypedText = typedText.join('');
+                let finalAccuracy = 0;
+                let finalCorrectChars = 0;
+                for (let i = 0; i < targetText.length; i++) {
+                    if (typedText[i] === targetText[i]) {
+                        finalCorrectChars++;
+                    }
+                }
+                finalAccuracy = Math.round((finalCorrectChars / targetText.length) * 100);
+
+                if (finalAccuracy === 100) {
+                    endTest(true); // Test completed successfully
+                } else {
+                    // If not 100% accurate, allow user to correct mistakes
+                    // The test will only truly end when all characters are correct
+                    showMessage(`Keep going! Current Accuracy: ${finalAccuracy}%. Correct all characters to finish.`);
+                }
+            }
+        });
+
+        // Handles backspace and other non-input events (like escape)
+        textInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Backspace') {
+                if (typedText.length > 0) {
+                    playSound('backspace');
+                }
+            } else if (event.key === 'Escape') {
+                endTest(false); // User wants to exit
+                showMessage("Test aborted. Press Restart to try again.");
+            }
+        });
+
+        // Ends the typing test
+        function endTest(success) {
+            isTestActive = false;
+            clearInterval(timerInterval);
+            textInput.disabled = true; // Disable input after test
+            textInput.value = typedText.join(''); // Ensure final typed text is shown
+
+            if (success) {
+                showMessage(`Test completed! WPM: ${wpmSpan.textContent}, Accuracy: ${accuracySpan.textContent}. Press Restart to play again.`);
+                playSound('success'); // Success sound
+            } else {
+                // Message already set by keydown for escape
+                // Re-enable input if it was aborted, so restart works directly
+                textInput.disabled = false;
+            }
+        }
+
+        // Handles text selection change
+        textSelector.addEventListener('change', (event) => {
+            targetText = texts[parseInt(event.target.value)];
+            startTest(); // Restart test with new text
+        });
+
+        // Restart button functionality
+        restartButton.addEventListener('click', () => {
+            startTest();
+        });
+
+        // --- Gemini API Integration for Custom Text Generation ---
+
+        // Show the modal for generating text
+        generateTextButton.addEventListener('click', () => {
+            generateModal.classList.add('show');
+            promptInput.focus();
+        });
+
+        // Hide the modal
+        cancelButton.addEventListener('click', () => {
+            generateModal.classList.remove('show');
+            promptInput.value = ''; // Clear prompt
+            loadingIndicator.style.display = 'none'; // Hide loading
+        });
+
+        // Handle text generation
+        generateButton.addEventListener('click', async () => {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                showMessage("Please enter a topic or keywords to generate text.");
+                return;
+            }
+
+            loadingIndicator.style.display = 'block'; // Show loading indicator
+            generateButton.disabled = true;
+            cancelButton.disabled = true;
+            textInput.disabled = true; // Disable main input during generation
+
+            try {
+                // Make a request to your Flask backend
+                // IMPORTANT: If deploying, this URL will need to be updated to your backend's deployed URL
+                const backendUrl = 'http://127.0.0.1:5000/generate-text'; 
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) { // Check if the HTTP status is 2xx
+                    const generatedText = result.generatedText;
+                    if (generatedText) {
+                        // Update the target text with the generated content
+                        targetText = generatedText.trim();
+                        // Add generated text to the selector (optional, but good for persistence in session)
+                        const newOption = document.createElement('option');
+                        newOption.value = texts.length; // Assign a new index
+                        newOption.textContent = targetText.substring(0, Math.min(targetText.length, 50)) + (targetText.length > 50 ? "..." : ""); // Short preview
+                        textSelector.appendChild(newOption);
+                        textSelector.value = newOption.value; // Select the new text
+
+                        generateModal.classList.remove('show'); // Hide modal
+                        promptInput.value = ''; // Clear prompt
+                        showMessage("New text generated! Starting test with custom content.");
+                        startTest(); // Start test with new text
+                    } else {
+                        showMessage("Failed to generate text. The response was empty.");
+                        console.error("Backend response empty:", result);
+                    }
+                } else {
+                    showMessage(`Error: ${result.error || 'Unknown error from backend.'}`);
+                    console.error("Backend error:", result);
+                }
+            } catch (error) {
+                showMessage("Error connecting to the text generation service. Please ensure the backend server is running.");
+                console.error("Error calling backend API:", error);
+            } finally {
+                loadingIndicator.style.display = 'none'; // Hide loading indicator
+                generateButton.disabled = false;
+                cancelButton.disabled = false;
+                textInput.disabled = false; // Re-enable main input
+            }
+        });
+
+        // Initialize the test on page load
+        document.addEventListener('DOMContentLoaded', startTest);
+
+    </script>
+</body>
+</html>
