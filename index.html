@@ -235,6 +235,7 @@
         </div>
 
         <button id="generate-text-button" class="button-primary">✨ Generate New Text</button>
+        <button id="get-feedback-button" class="button-primary" disabled>✨ Get Feedback</button>
         <button id="restart-button" class="button-primary">Restart Test</button>
 
         <div id="message-box" class="message-box"></div>
@@ -266,6 +267,7 @@
         const messageBox = document.getElementById('message-box');
         const textSelector = document.getElementById('text-selector');
         const generateTextButton = document.getElementById('generate-text-button');
+        const getFeedbackButton = document.getElementById('get-feedback-button'); // New button
         const generateModal = document.getElementById('generate-modal');
         const promptInput = document.getElementById('prompt-input');
         const generateButton = document.getElementById('generate-button');
@@ -391,6 +393,7 @@
             accuracySpan.textContent = '0%';
             timeSpan.textContent = '0.00';
             messageBox.style.display = 'none'; // Hide any messages
+            getFeedbackButton.disabled = true; // Disable feedback button at start
 
             // Reset correct and total chars for accuracy
             correctChars = 0;
@@ -480,10 +483,12 @@
             if (success) {
                 showMessage(`Test completed! WPM: ${wpmSpan.textContent}, Accuracy: ${accuracySpan.textContent}. Press Restart to play again.`);
                 playSound('success'); // Success sound
+                getFeedbackButton.disabled = false; // Enable feedback button on successful completion
             } else {
                 // Message already set by keydown for escape
                 // Re-enable input if it was aborted, so restart works directly
                 textInput.disabled = false;
+                getFeedbackButton.disabled = true; // Keep feedback button disabled if aborted
             }
         }
 
@@ -572,6 +577,50 @@
                 textInput.disabled = false; // Re-enable main input
             }
         });
+
+        // --- New Feature: Get Feedback from Gemini API ---
+        getFeedbackButton.addEventListener('click', async () => {
+            showMessage("Getting personalized feedback... Please wait.");
+            getFeedbackButton.disabled = true;
+            restartButton.disabled = true; // Temporarily disable other buttons
+            generateTextButton.disabled = true;
+
+            const wpm = wpmSpan.textContent;
+            const cpm = cpmSpan.textContent;
+            const accuracy = accuracySpan.textContent;
+            const textContent = targetText; // The text they just typed
+
+            try {
+                const backendUrl = 'http://127.0.0.1:5000/get-feedback'; // New endpoint for feedback
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wpm, cpm, accuracy, textContent })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (result.feedback) {
+                        showMessage(`✨ **AI Feedback:** ${result.feedback}`);
+                    } else {
+                        showMessage("Failed to get feedback. Response was empty.");
+                        console.error("Backend feedback empty:", result);
+                    }
+                } else {
+                    showMessage(`Error getting feedback: ${result.error || 'Unknown error from backend.'}`);
+                    console.error("Backend feedback error:", result);
+                }
+            } catch (error) {
+                showMessage("Error connecting to the feedback service. Ensure backend is running and has the /get-feedback endpoint.");
+                console.error("Error calling feedback API:", error);
+            } finally {
+                getFeedbackButton.disabled = false;
+                restartButton.disabled = false;
+                generateTextButton.disabled = false;
+            }
+        });
+
 
         // Initialize the test on page load
         document.addEventListener('DOMContentLoaded', startTest);
